@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <!-- Font Awesome for icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link
+        rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+        crossorigin="anonymous"
+        />
+        <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+        <title>{% block title %}Home{% endblock %}</title>
+        <style>
+            .navbar {
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                padding: 0.8rem 1rem;
+            }
+            .navbar-brand {
+                font-weight: 700;
+                font-size: 1.5rem;
+                letter-spacing: 0.5px;
+                margin-right: 2rem;
+            }
+            .nav-item {
+                margin: 0 0.5rem;
+                position: relative;
+                transition: all 0.3s ease;
+            }
+            .nav-item:last-child {
+                margin-right: 0;
+            }
+            .nav-link {
+                font-weight: 500;
+                padding: 0.5rem 1rem !important;
+                border-radius: 4px;
+                transition: all 0.3s ease;
+            }
+            .nav-link:hover {
+                background-color: rgba(255, 255, 255, 0.15);
+                transform: translateY(-2px);
+            }
+            .nav-link.active {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+            .nav-link::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                width: 0;
+                height: 2px;
+                background: white;
+                transition: all 0.3s ease;
+                transform: translateX(-50%);
+            }
+            .nav-link:hover::after {
+                width: 70%;
+            }
+            .navbar-toggler {
+                border: none;
+                padding: 0.5rem;
+            }
+            .navbar-toggler:focus {
+                outline: none;
+            }
+            @media (max-width: 991.98px) {
+                .navbar-collapse {
+                    padding-top: 1rem;
+                }
+                .nav-item {
+                    margin: 0.25rem 0;
+                }
+                .nav-link {
+                    padding: 0.75rem 1rem !important;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <i class="fas fa-utensils mr-2"></i>Tasty
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbar">
+                    <ul class="navbar-nav mr-auto">
+                        {% if current_user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/' %}active{% endif %}" id="home" href="/">
+                                    <i class="fas fa-home mr-1"></i>Home
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == url_for('views.calendar') %}active{% endif %}" id="calendar" href="{{ url_for('views.calendar') }}">
+                                    <i class="fas fa-calendar-alt mr-1"></i>Calendar
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <ul class="navbar-nav">
+                        {% if current_user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link" id="logout" href="/logout">
+                                    <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/login' %}active{% endif %}" id="login" href="/login">
+                                    <i class="fas fa-sign-in-alt mr-1"></i>Login
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/sign-up' %}active{% endif %}" id="signUp" href="/sign-up">
+                                    <i class="fas fa-user-plus mr-1"></i>Sign Up
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+          {% for category, message in messages %}
+          {% if category == 'error' %}
+          <div class="alert alert-danger alter-dismissable fade show" role="alert">
+              {{ message }}
+              <button type="button" class="close" data-dismiss="alert">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          {% else %}
+          <div class="alert alert-success alter-dismissable fade show" role="alert">
+              {{ message }}
+              <button type="button" class="close" data-dismiss="alert">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          {% endif%}
+          {% endfor %}
+      {% endif%}  
+      {% endwith %}
+      
+      <div class="container">{% block content %} {% endblock %}</div>
+      
+      <script
+        src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"
+      ></script>
+      <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"
+      ></script>
+      <script
+        src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"
+      ></script>
+      <!-- base.html -->
+<script>
+  // Initialize tooltips
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+  });
+  
+  // Meal plan form handling
+  $(document).ready(function() {
+      $('#saveMealPlan').click(function() {
+          const formData = {
+              name: $('#planName').val(),
+              start_date: $('#startDate').val(),
+              end_date: $('#endDate').val(),
+              recipes: $('input[type="checkbox"]:checked').map(function() {
+                  return $(this).val();
+              }).get()
+          };
+          
+          $.ajax({
+              url: '/add-meal-plan',
+              type: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify(formData),
+              success: function(response) {
+                  $('#newMealPlanModal').modal('hide');
+                  location.reload();
+              },
+              error: function(error) {
+                  alert('Error saving meal plan');
+              }
+          });
+      });
+      
+      // Set default dates in modal
+      const today = new Date();
+      const nextWeek = new Date();
+      nextWeek.setDate(today.getDate() + 7);
+      
+      $('#startDate').val(today.toISOString().split('T')[0]);
+      $('#endDate').val(nextWeek.toISOString().split('T')[0]);
+  });
+  
+  // Recipe ingredient checklist
+  function updateCheckedCount() {
+      const total = $('.ingredient-checkbox').length;
+      const checked = $('.ingredient-checkbox:checked').length;
+      $('#checked-count').text(`${checked}/${total}`);
+  }
+  
+  $(document).on('change', '.ingredient-checkbox', updateCheckedCount);
+  </script>
+  <style>
+    /* Additional CSS styles */
+.dropdown-menu {
+    min-width: 200px;
+}
+
+.checked-counter {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.spinner-border {
+    vertical-align: middle;
+}
+
+/* Custom checkbox style */
+.form-check-input:checked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    .display-4 {
+        font-size: 2rem;
+    }
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+/* Animation for alerts */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.alert {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Custom scrollbar for dropdowns */
+.dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+}
+    .bg-light-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    .shadow-sm {
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 1rem; }
+    .gap-4 { gap: 1.5rem; }
+    .gap-5 { gap: 3rem; }
+    
+    /* Animation for cards */
+    .card {
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #dc3545;
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #c82333;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .display-4 {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+<!-- base.html (additional JavaScript) -->
+<script>
+  // Initialize all tooltips
+  $(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+  });
+  
+  // Handle recipe ingredient checkboxes
+  function updateCheckedCount(container) {
+      const checkboxes = container.querySelectorAll('.ingredient-checkbox');
+      const checked = container.querySelectorAll('.ingredient-checkbox:checked').length;
+      const counter = container.querySelector('.checked-counter');
+      if (counter) {
+          counter.textContent = `${checked}/${checkboxes.length}`;
+      }
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+      // Update file input labels
+      document.querySelectorAll('.custom-file-input').forEach(input => {
+          input.addEventListener('change', function(e) {
+              const fileName = this.files[0]?.name || this.nextElementSibling.dataset.defaultText;
+              this.nextElementSibling.textContent = fileName;
+          });
+      });
+      
+      // Initialize ingredient checkboxes
+      document.querySelectorAll('.ingredient-container').forEach(container => {
+          container.querySelectorAll('.ingredient-checkbox').forEach(checkbox => {
+              checkbox.addEventListener('change', () => updateCheckedCount(container));
+          });
+          updateCheckedCount(container);
+      });
+      
+      // Handle meal plan date range selection
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+      
+      if (startDateInput && endDateInput) {
+          startDateInput.addEventListener('change', function() {
+              const startDate = new Date(this.value);
+              const endDate = new Date(startDate);
+              endDate.setDate(endDate.getDate() + 6); // Default to 1 week
+              endDateInput.valueAsDate = endDate;
+          });
+      }
+      
+      // AJAX form submissions
+      document.querySelectorAll('.ajax-form').forEach(form => {
+          form.addEventListener('submit', function(e) {
+              e.preventDefault();
+              const formData = new FormData(this);
+              const submitBtn = this.querySelector('[type="submit"]');
+              const originalText = submitBtn.innerHTML;
+              
+              submitBtn.disabled = true;
+              submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+              
+              fetch(this.action, {
+                  method: this.method,
+                  body: formData
+              })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      if (data.redirect) {
+                          window.location.href = data.redirect;
+                      } else {
+                          location.reload();
+                      }
+                  } else {
+                      alert(data.message || 'An error occurred');
+                  }
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  alert('An error occurred');
+              })
+              .finally(() => {
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML = originalText;
+              });
+          });
+      });
+  });
+  </script>
+  <!-- In your base.html -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Add this before closing body tag in base.html -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Success</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+    
+    <div id="errorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-danger text-white">
+            <strong class="me-auto">Error</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+    </body>
+</html>

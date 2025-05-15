@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Meal Planner{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2>My Meal Planner</h2>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <!-- Mini Calendar Card -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Calendar</h5>
+                </div>
+                <div class="card-body p-2">
+                    <div class="mini-calendar">
+                        <div class="calendar-header d-flex justify-content-between mb-2">
+                            <button class="btn btn-sm btn-outline-secondary prev-month">&lt;</button>
+                            <h6 class="month-year mb-0">{{ current_date.strftime('%B %Y') }}</h6>
+                            <button class="btn btn-sm btn-outline-secondary next-month">&gt;</button>
+                        </div>
+                        <div class="calendar-grid">
+                            {% for day in mini_calendar.days %}
+                            <div class="calendar-day {% if day.date == today %}today{% endif %} {% if day.has_meals %}has-meals{% endif %}"
+                                 data-date="{{ day.date.strftime('%Y-%m-%d') }}">
+                                <span>{{ day.date.day }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('views.calendar') }}" class="btn btn-danger mb-2 w-100">
+                        View Calendar
+                    </a>
+                    <a href="{{ url_for('views.my_recipes') }}" class="btn btn-outline-danger w-100">
+                        My Recipes
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Quick Add Meal Card -->
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Quick Add Meal</h5>
+                </div>
+                <div class="card-body">
+                    <form id="quickAddForm" class="row g-2">
+                        <div class="col-md-4">
+                            <input type="date" class="form-control" id="quickMealDate" value="{{ today.strftime('%Y-%m-%d') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="quickMealType">
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner" selected>Dinner</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="quickMealRecipe">
+                                <option value="">Select Recipe</option>
+                                {% for recipe in recipes %}
+                                <option value="{{ recipe.id }}">{{ recipe.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <button type="submit" class="btn btn-danger w-100">Add Meal</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Upcoming Meals Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Upcoming Meals</h5>
+                </div>
+                <div class="card-body">
+                    {% if meal_plan and meal_plan.meal_entries %}
+                        {% set upcoming_meals = meal_plan.meal_entries|sort(attribute='meal_date') %}
+                        <ul class="list-group">
+                            {% for meal in upcoming_meals[:5] %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ meal.meal_date.strftime('%a, %b %d') }}</strong> - 
+                                    {{ meal.recipe.title }} ({{ meal.meal_type }})
+                                </div>
+                                <a href="{{ url_for('views.daily_meals', date=meal.meal_date.strftime('%Y-%m-%d')) }}"
+                                   class="btn btn-sm btn-outline-danger">View</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <a href="{{ url_for('views.calendar') }}" class="btn btn-link mt-2">
+                            View all meals in calendar
+                        </a>
+                    {% else %}
+                        <p>No meals planned yet. Add some meals to get started!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mini calendar navigation
+    document.querySelector('.prev-month').addEventListener('click', function() {
+        // Will implement this later
+        alert('Previous month navigation will be added');
+    });
+    
+    document.querySelector('.next-month').addEventListener('click', function() {
+        // Will implement this later
+        alert('Next month navigation will be added');
+    });
+    
+    // Calendar day clicks
+    document.querySelectorAll('.calendar-day').forEach(day => {
+        day.addEventListener('click', function() {
+            const date = this.dataset.date;
+            if (date) {
+                window.location.href = `/daily_meals?date=${date}`;
+            }
+        });
+    });
+    
+    // Quick add form submission
+    document.getElementById('quickAddForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const date = document.getElementById('quickMealDate').value;
+        const mealType = document.getElementById('quickMealType').value;
+        const recipeId = document.getElementById('quickMealRecipe').value;
+        
+        if (!recipeId) {
+            alert('Please select a recipe');
+            return;
+        }
+        
+        fetch('/add-meal-to-plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'  // Add CSRF protection
+            },
+            body: JSON.stringify({
+                date: date,
+                recipe_id: recipeId,
+                meal_type: mealType
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Error adding meal');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while adding the meal');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Weekly Meal Plan{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Week Navigation -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Weekly Meal Plan</h2>
+        <div>
+            <a href="{{ url_for('views.calendar') }}" class="btn btn-outline-danger">
+                <i class="fas fa-calendar-alt"></i> Month View
+            </a>
+        </div>
+    </div>
+
+    <!-- Week Picker -->
+    <div class="text-center mb-4">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('views.weekly_calendar', date=prev_week.isoformat()) }}" 
+               class="btn btn-outline-danger">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <button type="button" class="btn btn-danger disabled">
+                Week of {{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d, %Y') }}
+            </button>
+            <a href="{{ url_for('views.weekly_calendar', date=next_week.isoformat()) }}" 
+               class="btn btn-outline-danger">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Weekly Calendar Grid -->
+    <div class="weekly-calendar">
+        <div class="row">
+            {% for day in range(7) %}
+            {% set current_date = (start_date + timedelta(days=day)).date() %}
+            <div class="col">
+                <div class="day-header bg-danger text-white p-2 text-center">
+                    <h5>{{ current_date.strftime('%A') }}</h5>
+                    <div>{{ current_date.strftime('%b %d') }}</div>
+                </div>
+                
+                <div class="day-meals p-2">
+                    {% for meal_type in ['Breakfast', 'Lunch', 'Dinner', 'Snack'] %}
+                        <div class="meal-slot mb-2 p-2 border rounded">
+                            <h6>{{ meal_type }}</h6>
+                            {% if meal_plan %}
+                                {% for mp_recipe in meal_plan.recipes %}
+                                    {% if mp_recipe.meal_date == current_date and mp_recipe.meal_type == meal_type.lower() %}
+                                        <div class="recipe-item d-flex justify-content-between align-items-center">
+                                            <span>{{ mp_recipe.recipe.title }}</span>
+                                            <button class="btn btn-sm btn-outline-danger remove-recipe" 
+                                                    data-id="{{ mp_recipe.id }}">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-primary w-100 add-recipe"
+                                    data-date="{{ current_date.isoformat() }}"
+                                    data-meal-type="{{ meal_type.lower() }}">
+                                <i class="fas fa-plus"></i> Add Recipe
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Recipe Modal -->
+<div class="modal fade" id="recipeModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Recipe</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="addRecipeForm" method="POST" action="{{ url_for('views.add_meal_to_plan') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="date" id="modalDate">
+                    <input type="hidden" name="meal_type" id="modalMealType">
+                    
+                    <div class="form-group">
+                        <label for="recipeSelect">Select Recipe</label>
+                        <select class="form-control" id="recipeSelect" name="recipe_id" required>
+                            <option value="">Choose a recipe...</option>
+                            {% for recipe in recipes %}
+                            <option value="{{ recipe.id }}">{{ recipe.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Add Recipe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .weekly-calendar {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .day-header {
+        min-height: 80px;
+    }
+    
+    .day-meals {
+        min-height: 400px;
+        background-color: white;
+    }
+    
+    .meal-slot {
+        background-color: #fff;
+    }
+    
+    .recipe-item {
+        padding: 5px;
+        margin-bottom: 5px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    @media (max-width: 768px) {
+        .col {
+            min-width: 100%;
+            margin-bottom: 20px;
+        }
+    }
+</style>
+
+<script>
+$(document).ready(function() {
+    // Handle add recipe button
+    $('.add-recipe').click(function() {
+        $('#modalDate').val($(this).data('date'));
+        $('#modalMealType').val($(this).data('meal-type'));
+        $('#recipeModal').modal('show');
+    });
+
+    // Handle remove recipe button
+    $('.remove-recipe').click(function() {
+        if (confirm('Are you sure you want to remove this recipe?')) {
+            const recipeId = $(this).data('id');
+            $.ajax({
+                url: '/remove-meal/' + recipeId,
+                type: 'DELETE',
+                success: function() {
+                    location.reload();
+                },
+                error: function() {
+                    alert('Error removing recipe');
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

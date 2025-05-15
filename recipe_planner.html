@@ -1,0 +1,158 @@
+{# At the very top of the template #}
+{% if not user or not user.is_authenticated %}
+  <meta http-equiv="refresh" content="0; url={{ url_for('auth.login') }}">
+{% endif %}
+
+{% set recipes = recipes|default([]) %}
+{% set categories = categories|default([]) %}
+{# Temporary safety checks #}
+{% set recipes = recipes|default([]) %}
+{% set user = user|default(none) %}<!-- recipe_detail.html -->
+{% extends "base.html" %}
+{% block title %}{{ recipe.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Recipe Image and Basic Info -->
+        <div class="col-lg-8">
+            <div class="text-center mb-4">
+                <img src="{{ recipe.image_url or 'https://via.placeholder.com/800x500?text=No+Image' }}" 
+                     class="img-fluid rounded shadow" 
+                     alt="{{ recipe.title }}">
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-4 font-weight-bold">{{ recipe.title }}</h1>
+                    <p class="lead text-muted">by {{ recipe.author.first_name }} {{ recipe.author.last_name }}</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-danger">
+                        <i class="far fa-heart"></i> Save
+                    </button>
+                    <button class="btn btn-danger ml-2">
+                        <i class="fas fa-utensils"></i> Add to Plan
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Recipe Stats -->
+            <div class="d-flex flex-wrap gap-4 mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-clock fa-2x text-danger mr-2"></i>
+                    <div>
+                        <small class="text-muted">PREP TIME</small>
+                        <h5 class="mb-0">{{ recipe.prep_time }} mins</h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-fire fa-2x text-danger mr-2"></i>
+                    <div>
+                        <small class="text-muted">COOK TIME</small>
+                        <h5 class="mb-0">{{ recipe.cook_time }} mins</h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-users fa-2x text-danger mr-2"></i>
+                    <div>
+                        <small class="text-muted">SERVINGS</small>
+                        <h5 class="mb-0">{{ recipe.servings }}</h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-tachometer-alt fa-2x text-danger mr-2"></i>
+                    <div>
+                        <small class="text-muted">DIFFICULTY</small>
+                        <h5 class="mb-0">{{ recipe.difficulty or 'Medium' }}</h5>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Description</h3>
+                    <p class="card-text">{{ recipe.description or 'No description provided.' }}</p>
+                </div>
+            </div>
+            
+            <!-- Ingredients -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Ingredients</h3>
+                    <ul class="list-group list-group-flush">
+                        {% for ingredient in recipe.ingredients.split('\n') %}
+                        {% if ingredient.strip() %}
+                        <li class="list-group-item border-0">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="ingredient{{ loop.index }}">
+                                <label class="form-check-label" for="ingredient{{ loop.index }}">
+                                    {{ ingredient }}
+                                </label>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="card-title">Instructions</h3>
+                    <ol class="list-group list-group-numbered list-group-flush">
+                        {% for instruction in recipe.instructions.split('\n') %}
+                        {% if instruction.strip() %}
+                        <li class="list-group-item border-0">{{ instruction }}</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Author and Nutrition Info -->
+        <div class="col-lg-4">
+            <!-- Author Card -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <img src="{{ recipe.author.profile_image or 'https://via.placeholder.com/150?text=Chef' }}" 
+                         class="rounded-circle mb-3" width="120" height="120" 
+                         alt="{{ recipe.author.first_name }}">
+                    <h5 class="card-title">{{ recipe.author.first_name }} {{ recipe.author.last_name }}</h5>
+                    <p class="card-text text-muted">{{ recipe.author.recipes|length }} recipes</p>
+                    <a href="#" class="btn btn-outline-danger btn-sm">View Profile</a>
+                </div>
+            </div>
+            
+            <!-- Nutrition Info -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Nutrition Information</h5>
+                    <p class="text-muted">(Approximate values per serving)</p>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item border-0 d-flex justify-content-between">
+                            <span>Calories</span>
+                            <span class="font-weight-bold">450 kcal</span>
+                        </li>
+                        <li class="list-group-item border-0 d-flex justify-content-between">
+                            <span>Protein</span>
+                            <span class="font-weight-bold">25g</span>
+                        </li>
+                        <li class="list-group-item border-0 d-flex justify-content-between">
+                            <span>Carbohydrates</span>
+                            <span class="font-weight-bold">35g</span>
+                        </li>
+                        <li class="list-group-item border-0 d-flex justify-content-between">
+                            <span>Fat</span>
+                            <span class="font-weight-bold">20g</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
