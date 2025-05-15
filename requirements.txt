@@ -1,5 +1,4 @@
 
-gunicorn==23.0.0
+gunicorn  # Let pip install latest compatible version
 packaging==25.0
-gunicorn==XX.XX.X
 >>>>>>> 33d3347dfdad88084063d740076e1dddcf5c3701
