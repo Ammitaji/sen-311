@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold mb-2">Meal Planning Calendar</h1>
+        <p class="lead text-muted">Organize your weekly meals with ease</p>
+    </div>
+
+    <!-- Planning Section -->
+    <div class="row g-4">
+        <!-- Add Meal Card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-danger text-white rounded-top">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Meal</h5>
+                </div>
+                <div class="card-body">
+                    <form id="addMealForm">
+                        <!-- Date Picker -->
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" id="mealDate" required 
+                                   value="{{ today.strftime('%Y-%m-%d') }}">
+                        </div>
+                        
+                        <!-- Meal Type -->
+                        <div class="mb-3">
+                            <label class="form-label">Meal Type</label>
+                            <select class="form-select" id="mealType" required>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner" selected>Dinner</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Recipe Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">Recipe</label>
+                            <select class="form-select" id="recipeSelect" required>
+                                <option value="">Select a recipe...</option>
+                                {% for recipe in current_user.recipes %}
+                                <option value="{{ recipe.id }}">{{ recipe.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-danger w-100 py-2">
+                            <i class="fas fa-plus me-2"></i> Add to Plan
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Meals Card -->
+         <!-- Today's Meals Card -->
+<div class="col-lg-6">
+    <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-danger text-white rounded-top">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i>Today's Meals</h5>
+                <span class="badge bg-light text-dark">{{ today.strftime('%b %d') }}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if today_meals %}
+                <div class="list-group">
+                    {% for meal in today_meals %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ meal.meal_type|title }}</strong>: {{ meal.recipe.title }}
+                            </div>
+                            <form method="POST" action="{{ url_for('views.remove_meal', meal_id=meal.id) }}">
+                                <input type="hidden" name="date" value="{{ today.strftime('%Y-%m-%d') }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No meals planned for today</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form submission
+    document.getElementById('addMealForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            date: document.getElementById('mealDate').value,
+            meal_type: document.getElementById('mealType').value,
+            recipe_id: document.getElementById('recipeSelect').value
+        };
+        
+        fetch("{{ url_for('views.add_meal_to_plan') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add meal');
+        });
+    });
+});
+</script>
+{% endblock %}

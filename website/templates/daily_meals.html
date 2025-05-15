@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Meals for {{ date.strftime('%B %d, %Y') }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header with date and navigation -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ date.strftime('%A') }}</h2>
+            <h1 class="display-5 fw-bold mb-0">{{ date.strftime('%B %d, %Y') }}</h1>
+        </div>
+        <div>
+            <a href="{{ url_for('views.calendar', year=date.year, month=date.month) }}" 
+               class="btn btn-outline-danger rounded-pill px-4">
+                <i class="fas fa-arrow-left me-2"></i>Back to Calendar
+            </a>
+        </div>
+    </div>
+
+    <!-- Meal cards in a responsive grid -->
+    <div class="row g-4">
+        {% for meal_type in ['breakfast', 'lunch', 'dinner', 'snack'] %}
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-danger text-white rounded-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-{% if meal_type == 'breakfast' %}coffee{% elif meal_type == 'lunch' %}utensils{% elif meal_type == 'dinner' %}drumstick-bite{% else %}apple-alt{% endif %} me-2"></i>
+                            {{ meal_type|title }}
+                        </h5>
+                        <button class="btn btn-sm btn-light rounded-circle p-1" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#addMealModal" 
+                                data-meal-type="{{ meal_type }}">
+                            <i class="fas fa-plus small"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% set type_meals = [] %}
+                    {% for meal in meals if meal.meal_type == meal_type %}
+                        {% set _ = type_meals.append(meal) %}
+                    {% endfor %}
+                    
+                    {% if type_meals %}
+                        <div class="list-group list-group-flush">
+                            {% for meal in type_meals %}
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="me-3">
+                                        <h6 class="mb-1">{{ meal.recipe.title }}</h6>
+                                        {% if meal.recipe.prep_time or meal.recipe.cook_time %}
+                                        <small class="text-muted">
+                                            <i class="far fa-clock me-1"></i>
+                                            {% if meal.recipe.prep_time and meal.recipe.cook_time %}
+                                                {{ meal.recipe.prep_time + meal.recipe.cook_time }} min
+                                            {% elif meal.recipe.prep_time %}
+                                                {{ meal.recipe.prep_time }} min prep
+                                            {% else %}
+                                                {{ meal.recipe.cook_time }} min cook
+                                            {% endif %}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                    <form method="POST" action="{{ url_for('views.remove_meal', meal_id=meal.id) }}" class="d-inline">
+                                        <input type="hidden" name="date" value="{{ date.strftime('%Y-%m-%d') }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="far fa-calendar-plus fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No {{ meal_type }} planned</p>
+                            <button class="btn btn-sm btn-outline-danger mt-3 rounded-pill" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#addMealModal" 
+                                    data-meal-type="{{ meal_type }}">
+                                Add {{ meal_type }}
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add Meal Modal -->
+<div class="modal fade" id="addMealModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Add Meal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('views.add_meal_to_plan') }}">
+                <div class="modal-body pb-4">
+                    <input type="hidden" name="date" value="{{ date.strftime('%Y-%m-%d') }}">
+                    <input type="hidden" name="meal_type" id="modalMealType" value="">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Select Recipe</label>
+                        <select name="recipe_id" class="form-select" required>
+                            <option value="">Choose a recipe...</option>
+                            {% for recipe in recipes %}
+                            <option value="{{ recipe.id }}">{{ recipe.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Add Meal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+    }
+    .card-header {
+        padding: 1rem 1.25rem;
+    }
+    .list-group-item {
+        transition: background-color 0.2s;
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set meal type when modal is shown
+    var addMealModal = document.getElementById('addMealModal');
+    addMealModal.addEventListener('show.bs.modal', function(event) {
+        var button = event.relatedTarget;
+        document.getElementById('modalMealType').value = button.getAttribute('data-meal-type');
+    });
+    
+    // Confirm before removing meals
+    document.querySelectorAll('form[action*="/remove-meal/"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you sure you want to remove this meal?')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

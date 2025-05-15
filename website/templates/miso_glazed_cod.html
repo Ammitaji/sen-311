@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1 class="mb-3">{{ recipe.title }}</h1>
+            <p class="text-muted">By {{ recipe.author.display_name if recipe.author else 'Our Chef' }}</p>
+
+            <img src="{{ recipe.image_url or 'https://cdn.usegalileo.ai/sdxl10/2aecf54f-0446-4e19-b196-cc6ba6d70d77.png' }}"
+                 class="img-fluid mb-4 rounded" 
+                 alt="{{ recipe.title }}">
+
+            <h4 class="text-danger font-weight-bold">Ingredients</h4>
+            <div class="recipe-ingredients">
+                {{ recipe.ingredients|safe }}
+            </div>
+
+            <h4 class="text-danger font-weight-bold">Instructions</h4>
+            <div class="recipe-instructions">
+                {{ recipe.instructions|safe }}
+            </div>
+
+            <a href="{{ url_for('views.home') }}" class="btn btn-outline-danger mt-4">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

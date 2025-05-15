@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+    <!-- Recipe Header -->
+    <div class="text-center mb-4">
+        <h1 class="mb-1">{{ recipe.title }}</h1>
+        <p class="text-muted">By Chef {{ recipe.author.first_name }}</p>
+        <hr class="mx-auto" style="width: 100px; border-top: 2px solid #dc3545;">
+    </div>
+
+    <!-- Recipe Image with Error Handling -->
+    <div class="text-center mb-4">
+        <img src="{{ recipe.image_url if recipe.image_url else url_for('static', filename='images/recipe_placeholder.jpg') }}" 
+             alt="{{ recipe.title }}"
+             class="img-fluid rounded"
+             style="max-height: 400px; width: 100%; object-fit: cover;">
+    </div>
+
+    <!-- Ingredients Section -->
+    <div class="mb-5">
+        <h3 class="mb-3 border-bottom pb-2">Ingredients</h3>
+        <div class="px-3">
+            {{ recipe.ingredients|safe }}
+        </div>
+    </div>
+
+    <!-- Instructions Section -->
+    <div class="mb-4">
+        <h3 class="mb-3 border-bottom pb-2">Instructions</h3>
+        <div class="px-3">
+            {{ recipe.instructions|safe }}
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-5">
+        <a href="{{ url_for('views.home') }}" class="btn btn-outline-danger">
+            ← Back to Recipes
+        </a>
+    </div>
+</div>
+
+<style>
+    /* Clean typography */
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+    }
+    
+    h1 {
+        font-size: 2.2rem;
+        font-weight: 600;
+    }
+    
+    h3 {
+        font-size: 1.4rem;
+        font-weight: 500;
+    }
+    
+    /* List styling */
+    ul, ol {
+        padding-left: 1.5rem;
+    }
+    
+    li {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Minimalist spacing */
+    .container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 1.8rem;
+        }
+        h3 {
+            font-size: 1.2rem;
+        }
+        img {
+            max-height: 300px !important;
+        }
+    }
+</style>
+{% endblock %}

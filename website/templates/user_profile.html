@@ -1,0 +1,81 @@
+<!-- user_profile.html -->
+{% extends "base.html" %}
+{% block title %}{{ user.first_name }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Profile Info -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <img src="{{ user.profile_image or 'https://via.placeholder.com/150?text=User' }}" 
+                         class="rounded-circle mb-3" width="150" height="150" 
+                         alt="{{ user.first_name }}">
+                    <h3>{{ user.first_name }} {{ user.last_name }}</h3>
+                    <p class="text-muted">{{ user.email }}</p>
+                    
+                    {% if user.bio %}
+                    <div class="text-left mt-3">
+                        <h5>About</h5>
+                        <p>{{ user.bio }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-center mt-4">
+                        <div class="text-center mx-3">
+                            <h5 class="mb-0">{{ user.recipes|length }}</h5>
+                            <small class="text-muted">Recipes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User's Recipes -->
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0">{{ user.first_name }}'s Recipes</h3>
+                {% if user.id == current_user.id %}
+                <a href="{{ url_for('views.add_recipe') }}" class="btn btn-danger btn-sm">
+                    <i class="fas fa-plus mr-1"></i>Add Recipe
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if user.recipes %}
+            <div class="row">
+                {% for recipe in user.recipes %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 border-danger">
+                        <img src="{{ recipe.image_url or 'https://via.placeholder.com/300x200?text=No+Image' }}" 
+                             class="card-img-top" alt="{{ recipe.title }}" 
+                             style="height: 150px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ recipe.title }}</h5>
+                            <p class="card-text text-muted small">{{ recipe.description|truncate(80) }}</p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <a href="{{ url_for('views.recipe_detail', recipe_id=recipe.id) }}" 
+                               class="btn btn-sm btn-outline-danger">View Recipe</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <h4>No recipes yet</h4>
+                <p class="text-muted">
+                    {% if user.id == current_user.id %}
+                    You haven't shared any recipes yet
+                    {% else %}
+                    This user hasn't shared any recipes yet
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

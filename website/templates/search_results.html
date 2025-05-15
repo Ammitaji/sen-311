@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results for "{{ query }}"{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Search Results for "{{ query }}"</h2>
+            <p class="text-muted">{{ total_results }} recipes found</p>
+        </div>
+        <div class="col-md-4">
+            <form action="{{ url_for('views.search') }}" method="GET" class="search-form">
+                <div class="input-group">
+                    <input type="text" name="query" class="form-control" 
+                           placeholder="Search again..." value="{{ query }}"
+                           aria-label="Search recipes">
+                    <div class="input-group-append">
+                        <button class="btn btn-danger" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if recipes %}
+    <div class="row">
+        {% for recipe in recipes %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 recipe-card">
+                <!-- Recipe Image with Fallback -->
+                <div class="card-img-container" style="height: 200px; background-color: #f8f9fa;">
+                    {% if recipe.image_url %}
+                        <img src="{{ recipe.image_url }}" 
+                             class="card-img-top" 
+                             alt="{{ recipe.title }}"
+                             onerror="this.onerror=null;this.style.display='none'">
+                        <div class="img-fallback d-none">
+                            <span class="text-muted">No Image</span>
+                        </div>
+                    {% else %}
+                        <div class="img-fallback">
+                            <span class="text-muted">No Image</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ recipe.title }}</h5>
+                    
+                    <!-- Author Profile -->
+                    <div class="d-flex align-items-center mb-2">
+                        {% if recipe.author.profile_image %}
+                            <img src="{{ recipe.author.profile_image }}" 
+                                 class="rounded-circle mr-2" 
+                                 width="30" 
+                                 height="30" 
+                                 alt="Author"
+                                 onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAzMCI+PGNpcmNsZSBjeD0iMTUiIGN5PSIxNSIgcj0iMTUiIGZpbGw9IiNkYzM1NDUiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMTIiPnt7IHJlY2lwZS5hdXRob3IuZmlyc3RfbmFtZVswXX18e3sgcmVjaXBlLmF1dGhvci5sYXN0X25hbWVbMF0gaWYgcmVjaXBlLmF1dGhvci5sYXN0X25hbWUgfX08L3RleHQ+PC9zdmc+'">
+                        {% else %}
+                            <div class="rounded-circle mr-2 profile-initials">
+                                {{ recipe.author.first_name[0]|upper }}{{ recipe.author.last_name[0]|upper if recipe.author.last_name }}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted">
+                            {{ recipe.author.full_name }}
+                        </small>
+                    </div>
+                    
+                    <p class="card-text text-muted small mb-3">
+                        {{ recipe.description|truncate(120) if recipe.description else "No description available" }}
+                    </p>
+                    
+                    <div class="recipe-meta d-flex justify-content-between mb-3">
+                        <span class="badge badge-light">
+                            <i class="fas fa-clock"></i> {{ recipe.total_time }} mins
+                        </span>
+                        <span class="badge badge-light">
+                            <i class="fas fa-utensils"></i> {{ recipe.servings or 'N/A' }} servings
+                        </span>
+                        <span class="badge badge-light">
+                            {{ recipe.difficulty or 'N/A' }}
+                        </span>
+                    </div>
+                    
+                    {% if recipe.category %}
+                    <span class="badge badge-danger">{{ recipe.category.name }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('views.recipe_by_slug', recipe_slug=recipe.title|slugify) }}" 
+                           class="btn btn-sm btn-outline-danger">View Recipe</a>
+                        <small class="text-muted">
+                            {{ recipe.created_at.strftime('%b %d, %Y') if recipe.created_at }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <nav aria-label="Search results pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" 
+                   href="{{ url_for('views.search', query=query, page=pagination.prev_num) }}"
+                   aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=3) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" 
+                           href="{{ url_for('views.search', query=query, page=page_num) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" 
+                   href="{{ url_for('views.search', query=query, page=pagination.next_num) }}"
+                   aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 my-5">
+        <div class="empty-state">
+            <i class="fas fa-search fa-3x text-muted mb-4"></i>
+            <h4 class="mb-3">No recipes found</h4>
+            <p class="text-muted mb-4">We couldn't find any recipes matching "{{ query }}"</p>
+            <a href="{{ url_for('views.home') }}" class="btn btn-danger">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Custom styles for search results */
+    .recipe-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    }
+
+    .recipe-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .card-img-container {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .card-img-top {
+        object-fit: cover;
+        height: 100%;
+        width: 100%;
+        transition: transform 0.3s ease;
+    }
+
+    .img-fallback {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+
+    .profile-initials {
+        width: 30px;
+        height: 30px;
+        background-color: #dc3545;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    .empty-state {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: rgba(248,249,250,0.8);
+        border-radius: 10px;
+    }
+
+    img[style*="display: none"] + .img-fallback {
+        display: flex !important;
+    }
+</style>
+{% endblock %}
